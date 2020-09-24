@@ -2,9 +2,30 @@
   "name": "bako",
   "version": "1.0",
   "description": "Gbf auto refresh on attack",
-  "permissions": ["webRequest", "tabs", "http://game.granbluefantasy.jp/*"],
+  "permissions": [
+    "webRequest",
+    "tabs",
+    "declarativeContent",
+    "storage",
+    "http://game.granbluefantasy.jp/*"
+  ],
   "background": {
     "scripts": ["background.js"]
+  },
+  "page_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/get_started16.png",
+      "32": "images/get_started32.png",
+      "48": "images/get_started48.png",
+      "128": "images/get_started128.png"
+    }
+  },
+  "icons": {
+    "16": "images/get_started16.png",
+    "32": "images/get_started32.png",
+    "48": "images/get_started48.png",
+    "128": "images/get_started128.png"
   },
   "manifest_version": 2
 }
