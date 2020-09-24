@@ -1,0 +1,10 @@
+{
+  "name": "bako",
+  "version": "1.0",
+  "description": "Gbf auto refresh on attack",
+  "permissions": ["webRequest", "tabs", "http://game.granbluefantasy.jp/*"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "manifest_version": 2
+}
