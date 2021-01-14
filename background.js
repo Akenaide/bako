@@ -4,6 +4,11 @@
 
 'use strict';
 
+const skills = {
+  "6199": "Conjunction",
+  "8001": "Tag team"
+}
+
 var activate = true;
 // http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
@@ -16,9 +21,27 @@ chrome.webRequest.onCompleted.addListener(
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json*",
-      "http://game.granbluefantasy.jp/rest/raid/normal_attack_result.json*"]
+      "http://game.granbluefantasy.jp/rest/*/summon_result.json*",
+      "http://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
   },
+);
+
+chrome.webRequest.onBeforeRequest.addListener(
+  function (details) {
+    var postedString = JSON.parse(decodeURIComponent(String.fromCharCode.apply(null,
+                                      new Uint8Array(details.requestBody.raw[0].bytes))));
+
+    chrome.storage.sync.get('reloadAttack', function (data) {
+      if (data.reloadAttack && Object.keys(skills).includes(postedString["ability_id"])) {
+        chrome.tabs.reload(details.tabId);
+      }
+    });
+  },
+  {
+    urls: [
+      "http://game.granbluefantasy.jp/rest/*/ability_result.json*"]
+  },
+  ["requestBody"]
 );
 
 // NM
