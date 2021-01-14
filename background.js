@@ -23,6 +23,7 @@ chrome.webRequest.onCompleted.addListener(
     urls: [
       "http://game.granbluefantasy.jp/rest/*/summon_result.json*",
       "http://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
+    ]
   },
 );
 
