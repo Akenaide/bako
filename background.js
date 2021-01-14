@@ -24,12 +24,23 @@ chrome.webRequest.onCompleted.addListener(
 // NM
 chrome.webRequest.onCompleted.addListener(
   function (details) {
-    if (activate) {
-      console.log(details);
-      // chrome.tabs.reload();
-    }
+    chrome.storage.sync.get('redirectFarm', function (data) {
+      if (data.redirectFarm) {
+        console.log("activate")
+        chrome.bookmarks.search({"title": "farm"}, function(result) {
+          console.log("found", result[0].url)
+          setTimeout(() => {
+            chrome.tabs.update(details.tabId, { url: result[0].url });
+          }, Math.floor(Math.random() * 1500) + 500);
+        });
+      }
+    })
   },
-  { urls: ["http://game.granbluefantasy.jp/resultmulti/data/*"] },
+  { urls: [
+    "http://game.granbluefantasy.jp/resultmulti/data/*",
+    "http://game.granbluefantasy.jp/*result/*"
+    ]
+  },
 );
 
 
@@ -48,6 +59,9 @@ chrome.webRequest.onCompleted.addListener(
 chrome.runtime.onInstalled.addListener(function() {
   chrome.storage.sync.set({ reloadAttack: false }, function () {
     console.log('Reload not activate');
+  })
+  chrome.storage.sync.set({ redirectFarm: false }, function () {
+    console.log('Redirect not activate');
   })
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
     chrome.declarativeContent.onPageChanged.addRules([{

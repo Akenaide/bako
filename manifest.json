@@ -7,6 +7,7 @@
     "tabs",
     "declarativeContent",
     "storage",
+    "bookmarks",
     "http://game.granbluefantasy.jp/*"
   ],
   "background": {

@@ -5,7 +5,7 @@
 'use strict';
 
 let reloadAttack = document.getElementById('reloadAttack');
-console.log("Hello");
+let redirectFarm = document.getElementById('redirectFarm');
 
 chrome.storage.sync.get('reloadAttack', function(data) {
   if (data.reloadAttack) {
@@ -13,7 +13,18 @@ chrome.storage.sync.get('reloadAttack', function(data) {
   }
 });
 
+chrome.storage.sync.get('redirectFarm', function(data) {
+  if (data.redirectFarm) {
+    redirectFarm.setAttribute('checked', true);
+  }
+});
+
 reloadAttack.onchange = function(element) {
   let value = element.target.checked;
   chrome.storage.sync.set({"reloadAttack": value});
+};
+
+redirectFarm.onchange = function(element) {
+  let value = element.target.checked;
+  chrome.storage.sync.set({"redirectFarm": value});
 };
