@@ -32,7 +32,7 @@ chrome.webRequest.onCompleted.addListener(
 chrome.webRequest.onBeforeRequest.addListener(
   function (details) {
     var postedString = JSON.parse(decodeURIComponent(String.fromCharCode.apply(null,
-                                      new Uint8Array(details.requestBody.raw[0].bytes))));
+      new Uint8Array(details.requestBody.raw[0].bytes))));
 
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack && Object.keys(skills).includes(postedString["ability_id"])) {
@@ -53,7 +53,7 @@ chrome.webRequest.onCompleted.addListener(
     chrome.storage.sync.get('redirectFarm', function (data) {
       if (data.redirectFarm) {
         console.log("activate")
-        chrome.bookmarks.search({"title": "farm"}, function(result) {
+        chrome.bookmarks.search({ "title": "farm" }, function (result) {
           console.log("found", result[0].url)
           setTimeout(() => {
             chrome.tabs.update(details.tabId, { url: result[0].url });
@@ -62,9 +62,10 @@ chrome.webRequest.onCompleted.addListener(
       }
     })
   },
-  { urls: [
-    "http://game.granbluefantasy.jp/resultmulti/data/*",
-    "http://game.granbluefantasy.jp/*result/*"
+  {
+    urls: [
+      "http://game.granbluefantasy.jp/resultmulti/data/*",
+      "http://game.granbluefantasy.jp/*result/*"
     ]
   },
 );
@@ -82,17 +83,17 @@ chrome.webRequest.onCompleted.addListener(
 //   }
 // });
 
-chrome.runtime.onInstalled.addListener(function() {
+chrome.runtime.onInstalled.addListener(function () {
   chrome.storage.sync.set({ reloadAttack: false }, function () {
     console.log('Reload not activate');
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {
     console.log('Redirect not activate');
   })
-  chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+  chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
     chrome.declarativeContent.onPageChanged.addRules([{
       conditions: [new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: {hostEquals: 'game.granbluefantasy.jp'},
+        pageUrl: { hostEquals: 'game.granbluefantasy.jp' },
       })],
       actions: [new chrome.declarativeContent.ShowPageAction()]
     }]);
