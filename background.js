@@ -15,7 +15,9 @@ chrome.webRequest.onCompleted.addListener(
   function (details) {
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack) {
-        chrome.tabs.reload(details.tabId);
+        setTimeout(() => {
+          chrome.tabs.goBack(details.tabId);
+        }, Math.floor(Math.random() * 500) + 500);
       }
     });
   },
