@@ -34,8 +34,8 @@ chrome.webRequest.onBeforeRequest.addListener(
     var postedString = JSON.parse(decodeURIComponent(String.fromCharCode.apply(null,
       new Uint8Array(details.requestBody.raw[0].bytes))));
 
-    chrome.storage.sync.get('reloadAttack', function (data) {
-      if (data.reloadAttack && Object.keys(skills).includes(postedString["ability_id"])) {
+    chrome.storage.sync.get('reloadSkill', function (data) {
+      if (data.reloadSkill && Object.keys(skills).includes(postedString["ability_id"])) {
         chrome.tabs.reload(details.tabId);
       }
     });
