@@ -1,21 +1,22 @@
 {
   "name": "bako",
-  "version": "1.1",
+  "version": "2.0",
   "description": "Gbf auto refresh on attack",
   "permissions": [
     "webRequest",
     "tabs",
     "declarativeContent",
     "storage",
-    "bookmarks",
+    "bookmarks"
+  ],
+  "host_permissions": [
     "http://game.granbluefantasy.jp/*"
+
   ],
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "service_worker": "service_worker.js"
   },
-  "page_action": {
+  "action": {
     "default_popup": "popup.html",
     "default_icon": {
       "16": "images/get_started16.png",
@@ -47,5 +48,5 @@
       "description": "Deactivate all options"
     }
   },
-  "manifest_version": 2
+  "manifest_version": 3
 }
