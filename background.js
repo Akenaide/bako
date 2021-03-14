@@ -10,6 +10,62 @@ const skills = {
 }
 
 var activate = true;
+
+let allKeys = [
+  "reloadSkill",
+  "reloadAttack",
+  "redirectFarm",
+  "arcaMode",
+]
+
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+  for (var key in changes) {
+    var storageChange = changes[key];
+    console.log('Storage key "%s" in namespace "%s" changed. ' +
+                'Old value was "%s", new value is "%s".',
+                key,
+                namespace,
+                storageChange.oldValue,
+                storageChange.newValue);
+  }
+});
+
+
+function toggleArcaMode() {
+  console.log("toggle Arca")
+  const params = ["reloadSkill", "redirectFarm", "arcaMode"]
+
+  chrome.storage.sync.get(params, (result) => {
+    for (const key of params) {
+        const element = !result[key];
+        result[key] = !result[key];
+    }
+        chrome.storage.sync.set(result, ()=> console.log("saved"))
+  })
+
+}
+
+function deactivateAll() {
+  console.log("Deactivate All")
+  let allVal = {};
+  for (const val of allKeys) {
+    allVal[val] = false;
+  }
+
+  chrome.storage.sync.set(allVal)
+}
+
+let keyboardShortcut = {
+  "toggle-aracarum-mode": toggleArcaMode,
+  "deactivate-all": deactivateAll
+}
+
+chrome.commands.onCommand.addListener(function (command) {
+  console.log('Command:', command);
+  keyboardShortcut[command]()
+});
+
 // http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
   function (details) {
@@ -53,12 +109,18 @@ chrome.webRequest.onCompleted.addListener(
     chrome.storage.sync.get('redirectFarm', function (data) {
       if (data.redirectFarm) {
         console.log("activate")
-        chrome.bookmarks.search({ "title": "farm" }, function (result) {
-          console.log("found", result[0].url)
-          setTimeout(() => {
-            chrome.tabs.update(details.tabId, { url: result[0].url });
-          }, Math.floor(Math.random() * 1500) + 500);
-        });
+        chrome.storage.sync.get('arcaMode', (data) => {
+          let key = "farm";
+          if (data.arcaMode) {
+            key = "arca";
+          }
+          chrome.bookmarks.search({ "title": key }, function (result) {
+            console.log("found", result[0].url)
+            setTimeout(() => {
+              chrome.tabs.update(details.tabId, { url: result[0].url });
+            }, Math.floor(Math.random() * 1500) + 500);
+          });
+        })
       }
     })
   },
@@ -70,25 +132,15 @@ chrome.webRequest.onCompleted.addListener(
   },
 );
 
-
-// chrome.storage.onChanged.addListener(function (changes, namespace) {
-//   for (var key in changes) {
-//     var storageChange = changes[key];
-//     console.log('Storage key "%s" in namespace "%s" changed. ' +
-//       'Old value was "%s", new value is "%s".',
-//       key,
-//       namespace,
-//       storageChange.oldValue,
-//       storageChange.newValue);
-//   }
-// });
-
 chrome.runtime.onInstalled.addListener(function () {
   chrome.storage.sync.set({ reloadAttack: false }, function () {
     console.log('Reload not activate');
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {
     console.log('Redirect not activate');
+  })
+  chrome.storage.sync.set({ 'arcaMode': false }, function () {
+    console.log('ArcaMode not activate');
   })
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
     chrome.declarativeContent.onPageChanged.addRules([{
