@@ -11,6 +11,7 @@ const skills = {
 
 var activate = true;
 
+var ongoingRedirect = false;
 let allKeys = [
   "reloadSkill",
   "reloadAttack",
@@ -19,15 +20,15 @@ let allKeys = [
 ]
 
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
+chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (var key in changes) {
     var storageChange = changes[key];
     console.log('Storage key "%s" in namespace "%s" changed. ' +
-                'Old value was "%s", new value is "%s".',
-                key,
-                namespace,
-                storageChange.oldValue,
-                storageChange.newValue);
+      'Old value was "%s", new value is "%s".',
+      key,
+      namespace,
+      storageChange.oldValue,
+      storageChange.newValue);
   }
 });
 
@@ -38,10 +39,10 @@ function toggleArcaMode() {
 
   chrome.storage.sync.get(params, (result) => {
     for (const key of params) {
-        const element = !result[key];
-        result[key] = !result[key];
+      const element = !result[key];
+      result[key] = !result[key];
     }
-        chrome.storage.sync.set(result, ()=> console.log("saved"))
+    chrome.storage.sync.set(result, () => console.log("saved"))
   })
 
 }
@@ -103,9 +104,12 @@ chrome.webRequest.onBeforeRequest.addListener(
   ["requestBody"]
 );
 
-// NM
-chrome.webRequest.onCompleted.addListener(
-  function (details) {
+function redirectMap(details) {
+  if (ongoingRedirect) {
+    return
+  }
+  ongoingRedirect = true;
+  setTimeout(() => {
     chrome.storage.sync.get('redirectFarm', function (data) {
       if (data.redirectFarm) {
         console.log("activate")
@@ -118,11 +122,21 @@ chrome.webRequest.onCompleted.addListener(
             console.log("found", result[0].url)
             setTimeout(() => {
               chrome.tabs.update(details.tabId, { url: result[0].url });
+              ongoingRedirect = false;
+
             }, Math.floor(Math.random() * 1500) + 500);
           });
         })
       }
     })
+  }, 3000);
+
+}
+
+// NM
+chrome.webRequest.onCompleted.addListener(
+  function (details) {
+    redirectMap(details);
   },
   {
     urls: [
