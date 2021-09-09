@@ -17,6 +17,7 @@ let allKeys = [
   "reloadAttack",
   "redirectFarm",
   "arcaMode",
+  "farmMap",
 ]
 
 
@@ -54,6 +55,7 @@ function deactivateAll() {
     allVal[val] = false;
   }
 
+  allVal['farmMap'] = "farm"
   ongoingRedirect = false;
   chrome.storage.sync.set(allVal)
 }
@@ -110,11 +112,11 @@ function redirectMap(details) {
     return
   }
   ongoingRedirect = true;
-  chrome.storage.sync.get(['redirectFarm', 'arcaMode', 'redirectTimeout'], function (data) {
+  chrome.storage.sync.get(['redirectFarm', 'arcaMode', 'redirectTimeout', 'farmMap'], function (data) {
     setTimeout(() => {
       if (data.redirectFarm) {
         console.log("activate")
-        let key = "farm";
+        let key = data.farmMap;
         if (data.arcaMode) {
           key = "arca";
         }
@@ -158,6 +160,9 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ 'redirectTimeout': 3000 }, function () {
     console.log('timeout is set to: 3000');
+  })
+  chrome.storage.sync.set({ 'farmMap': "farm" }, function () {
+    console.log('Look for "farm" name');
   })
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
     chrome.declarativeContent.onPageChanged.addRules([{
