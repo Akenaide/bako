@@ -54,6 +54,7 @@ function deactivateAll() {
     allVal[val] = false;
   }
 
+  ongoingRedirect = false;
   chrome.storage.sync.set(allVal)
 }
 
@@ -109,27 +110,26 @@ function redirectMap(details) {
     return
   }
   ongoingRedirect = true;
-  setTimeout(() => {
-    chrome.storage.sync.get('redirectFarm', function (data) {
+  chrome.storage.sync.get(['redirectFarm', 'arcaMode', 'redirectTimeout'], function (data) {
+    setTimeout(() => {
       if (data.redirectFarm) {
         console.log("activate")
-        chrome.storage.sync.get('arcaMode', (data) => {
-          let key = "farm";
-          if (data.arcaMode) {
-            key = "arca";
-          }
-          chrome.bookmarks.search({ "title": key }, function (result) {
-            console.log("found", result[0].url)
-            setTimeout(() => {
-              chrome.tabs.update(details.tabId, { url: result[0].url });
-              ongoingRedirect = false;
+        let key = "farm";
+        if (data.arcaMode) {
+          key = "arca";
+        }
+        console.log(key);
+        chrome.bookmarks.search({ "title": key }, function (result) {
+          console.log("found", result[0].url)
+          setTimeout(() => {
+            chrome.tabs.update(details.tabId, { url: result[0].url });
+            ongoingRedirect = false;
 
-            }, Math.floor(Math.random() * 1500) + 500);
-          });
-        })
+          }, Math.floor(Math.random() * 1500) + 500);
+        });
       }
-    })
-  }, 3000);
+    }, data.redirectTimeout);
+  })
 
 }
 
@@ -155,6 +155,9 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ 'arcaMode': false }, function () {
     console.log('ArcaMode not activate');
+  })
+  chrome.storage.sync.set({ 'redirectTimeout': 3000 }, function () {
+    console.log('timeout is set to: 3000');
   })
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
     chrome.declarativeContent.onPageChanged.addRules([{

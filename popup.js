@@ -7,6 +7,8 @@
 let reloadAttack = document.getElementById('reloadAttack');
 let reloadSkill = document.getElementById('reloadSkill');
 let redirectFarm = document.getElementById('redirectFarm');
+let redirectTimeout = document.getElementById('redirectTimeout');
+let timeoutValue = document.getElementById('timeoutValue');
 
 chrome.storage.sync.get('reloadAttack', function(data) {
   if (data.reloadAttack) {
@@ -26,6 +28,12 @@ chrome.storage.sync.get('redirectFarm', function(data) {
   }
 });
 
+chrome.storage.sync.get('redirectTimeout', function(data) {
+  if (data.redirectTimeout) {
+    redirectTimeout.nodeValue = data.redirectTimeout;
+  }
+});
+
 reloadSkill.onchange = function(element) {
   let value = element.target.checked;
   chrome.storage.sync.set({"reloadSkill": value});
@@ -39,4 +47,10 @@ reloadAttack.onchange = function(element) {
 redirectFarm.onchange = function(element) {
   let value = element.target.checked;
   chrome.storage.sync.set({"redirectFarm": value});
+};
+
+redirectTimeout.onchange = function(element) {
+  let value = element.target.value;
+  chrome.storage.sync.set({"redirectTimeout": value});
+  timeoutValue.value = value;
 };
