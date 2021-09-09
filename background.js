@@ -107,6 +107,20 @@ chrome.webRequest.onBeforeRequest.addListener(
   ["requestBody"]
 );
 
+
+chrome.webRequest.onCompleted.addListener(
+  function (details) {
+    ongoingRedirect = false;
+  },
+  {
+    urls: [
+      "http://game.granbluefantasy.jp/*/supporter/*"
+    ]
+  },
+);
+
+
+
 function redirectMap(details) {
   if (ongoingRedirect) {
     return
