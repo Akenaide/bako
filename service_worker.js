@@ -65,6 +65,27 @@ let keyboardShortcut = {
   "deactivate-all": deactivateAll
 }
 
+function backforward() {
+    window.history.back();
+    window.history.forward();
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "reload") {
+    // chrome.tabs.goBack(details.tabId);
+    chrome.tabs.reload();
+    // chrome.scripting.executeScript({
+    //   func: backforward
+    // });
+  }
+})
+
+function delayAction(name) {
+  let offset =  Math.floor(Math.random() * 500) + 500;
+  chrome.alarms.create(name=name, {when:Date.now() +  offset})
+
+}
+
 chrome.commands.onCommand.addListener(function (command) {
   console.log('Command:', command);
   keyboardShortcut[command]()
@@ -72,12 +93,10 @@ chrome.commands.onCommand.addListener(function (command) {
 
 // http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
-  function (details) {
+  function () {
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack) {
-        setTimeout(() => {
-          chrome.tabs.goBack(details.tabId);
-        }, Math.floor(Math.random() * 500) + 500);
+        delayAction("reload");
       }
     });
   },
@@ -109,7 +128,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 
 chrome.webRequest.onCompleted.addListener(
-  function (details) {
+  function () {
     ongoingRedirect = false;
   },
   {
