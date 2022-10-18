@@ -81,6 +81,9 @@ chrome.webRequest.onCompleted.addListener(
     urls: [
       "http://game.granbluefantasy.jp/rest/*/summon_result.json*",
       "http://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
+      "https://game.granbluefantasy.jp/rest/*/summon_result.json*",
+      "https://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
+
     ]
   },
 );
@@ -99,6 +102,7 @@ chrome.webRequest.onBeforeRequest.addListener(
   {
     urls: [
       "http://game.granbluefantasy.jp/rest/*/ability_result.json*"]
+      "https://game.granbluefantasy.jp/rest/*/ability_result.json*"]
   },
   ["requestBody"]
 );
@@ -128,6 +132,8 @@ chrome.webRequest.onCompleted.addListener(
     urls: [
       "http://game.granbluefantasy.jp/resultmulti/data/*",
       "http://game.granbluefantasy.jp/*result/*"
+      "https://game.granbluefantasy.jp/resultmulti/data/*",
+      "https://game.granbluefantasy.jp/*result/*"
     ]
   },
 );

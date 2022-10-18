@@ -10,7 +10,9 @@
     "bookmarks"
   ],
   "host_permissions": [
-    "http://game.granbluefantasy.jp/*"
+    "http://game.granbluefantasy.jp/*",
+    "https://game.granbluefantasy.jp/*"
+
 
   ],
   "background": {
