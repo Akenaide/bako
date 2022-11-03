@@ -1,18 +1,40 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      button {
-        height: 30px;
-        width: 30px;
-        outline: none;
-      }
-    </style>
-  </head>
-  <body>
-    Reload on attack: <input type="checkbox" id="reloadAttack"/>
-    Reload on skill: <input type="checkbox" id="reloadSkill"/>
-    Redirect to farm: <input type="checkbox" id="redirectFarm"/>
-    <script src="popup.js"></script>
-  </body>
+
+<head>
+  <style>
+    button {
+      height: 30px;
+      width: 30px;
+      outline: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="reload">
+    Reload
+    <hr>
+    <label for="reloadAttack">Attack: <input type="checkbox" id="reloadAttack" /></label>
+    <label for="reloadSkill">Skill: <input type="checkbox" id="reloadSkill" /></label>
+  </div>
+
+  <div id="redirect">
+
+    Redirect
+    <hr>
+    <label for="redirectFarm">Farm: <input type="checkbox" id="redirectFarm" /></label>
+    Timeout: <input type="range" name="timeout" id="redirectTimeout" min="500" max="5000" step="500">
+    <input type="number" disabled id="timeoutValue">
+  </div>
+  <div id="farm">
+
+    Bookmark
+    <hr>
+    <label for="farmMap">Farm name: <input type="text" id="farmMap" /></label>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
 </html>

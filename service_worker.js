@@ -11,23 +11,25 @@ const skills = {
 
 var activate = true;
 
+var ongoingRedirect = false;
 let allKeys = [
   "reloadSkill",
   "reloadAttack",
   "redirectFarm",
   "arcaMode",
+  "farmMap",
 ]
 
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
+chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (var key in changes) {
     var storageChange = changes[key];
     console.log('Storage key "%s" in namespace "%s" changed. ' +
-                'Old value was "%s", new value is "%s".',
-                key,
-                namespace,
-                storageChange.oldValue,
-                storageChange.newValue);
+      'Old value was "%s", new value is "%s".',
+      key,
+      namespace,
+      storageChange.oldValue,
+      storageChange.newValue);
   }
 });
 
@@ -38,10 +40,10 @@ function toggleArcaMode() {
 
   chrome.storage.sync.get(params, (result) => {
     for (const key of params) {
-        const element = !result[key];
-        result[key] = !result[key];
+      const element = !result[key];
+      result[key] = !result[key];
     }
-        chrome.storage.sync.set(result, ()=> console.log("saved"))
+    chrome.storage.sync.set(result, () => console.log("saved"))
   })
 
 }
@@ -53,12 +55,35 @@ function deactivateAll() {
     allVal[val] = false;
   }
 
+  allVal['farmMap'] = "farm"
+  ongoingRedirect = false;
   chrome.storage.sync.set(allVal)
 }
 
 let keyboardShortcut = {
   "toggle-aracarum-mode": toggleArcaMode,
   "deactivate-all": deactivateAll
+}
+
+function backforward() {
+    window.history.back();
+    window.history.forward();
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "reload") {
+    // chrome.tabs.goBack(details.tabId);
+    chrome.tabs.reload();
+    // chrome.scripting.executeScript({
+    //   func: backforward
+    // });
+  }
+})
+
+function delayAction(name) {
+  let offset =  Math.floor(Math.random() * 500) + 500;
+  chrome.alarms.create(name=name, {when:Date.now() +  offset})
+
 }
 
 chrome.commands.onCommand.addListener(function (command) {
@@ -68,12 +93,10 @@ chrome.commands.onCommand.addListener(function (command) {
 
 // http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
-  function (details) {
+  function () {
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack) {
-        setTimeout(() => {
-          chrome.tabs.goBack(details.tabId);
-        }, Math.floor(Math.random() * 500) + 500);
+        delayAction("reload");
       }
     });
   },
@@ -107,26 +130,52 @@ chrome.webRequest.onBeforeRequest.addListener(
   ["requestBody"]
 );
 
+
+chrome.webRequest.onCompleted.addListener(
+  function () {
+    ongoingRedirect = false;
+  },
+  {
+    urls: [
+      "http://game.granbluefantasy.jp/*/supporter/*"
+    ]
+  },
+);
+
+
+
+function redirectMap(details) {
+  if (ongoingRedirect) {
+    return
+  }
+  ongoingRedirect = true;
+  chrome.storage.sync.get(['redirectFarm', 'arcaMode', 'redirectTimeout', 'farmMap'], function (data) {
+    setTimeout(() => {
+      if (data.redirectFarm) {
+        console.log("activate")
+        let key = data.farmMap;
+        if (data.arcaMode) {
+          key = "arca";
+        }
+        console.log(key);
+        chrome.bookmarks.search({ "title": key }, function (result) {
+          console.log("found", result[0].url)
+          setTimeout(() => {
+            chrome.tabs.update(details.tabId, { url: result[0].url });
+            ongoingRedirect = false;
+
+          }, Math.floor(Math.random() * 1500) + 500);
+        });
+      }
+    }, data.redirectTimeout);
+  })
+
+}
+
 // NM
 chrome.webRequest.onCompleted.addListener(
   function (details) {
-    chrome.storage.sync.get('redirectFarm', function (data) {
-      if (data.redirectFarm) {
-        console.log("activate")
-        chrome.storage.sync.get('arcaMode', (data) => {
-          let key = "farm";
-          if (data.arcaMode) {
-            key = "arca";
-          }
-          chrome.bookmarks.search({ "title": key }, function (result) {
-            console.log("found", result[0].url)
-            setTimeout(() => {
-              chrome.tabs.update(details.tabId, { url: result[0].url });
-            }, Math.floor(Math.random() * 1500) + 500);
-          });
-        })
-      }
-    })
+    redirectMap(details);
   },
   {
     urls: [
@@ -147,6 +196,12 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ 'arcaMode': false }, function () {
     console.log('ArcaMode not activate');
+  })
+  chrome.storage.sync.set({ 'redirectTimeout': 3000 }, function () {
+    console.log('timeout is set to: 3000');
+  })
+  chrome.storage.sync.set({ 'farmMap': "farm" }, function () {
+    console.log('Look for "farm" name');
   })
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
     chrome.declarativeContent.onPageChanged.addRules([{
