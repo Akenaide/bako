@@ -70,21 +70,21 @@ chrome.commands.onCommand.addListener(function (command) {
   keyboardShortcut[command]()
 });
 
-// http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
+// https://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
   function (details) {
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack) {
         setTimeout(() => {
           chrome.tabs.goBack(details.tabId);
-        }, Math.floor(Math.random() * 500) + 500);
+        }, Math.floor(Math.random() * 100) + 100);
       }
     });
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/*/summon_result.json*",
-      "http://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
+      // "https://game.granbluefantasy.jp/rest/*/summon_result.json*",
+      "https://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
     ]
   },
 );
@@ -102,7 +102,7 @@ chrome.webRequest.onBeforeRequest.addListener(
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/*/ability_result.json*"]
+      "https://game.granbluefantasy.jp/rest/*/ability_result.json*"]
   },
   ["requestBody"]
 );
@@ -114,7 +114,7 @@ chrome.webRequest.onCompleted.addListener(
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/*/supporter/*"
+      "https://game.granbluefantasy.jp/*/supporter/*"
     ]
   },
 );
@@ -141,7 +141,7 @@ function redirectMap(details) {
             chrome.tabs.update(details.tabId, { url: result[0].url });
             ongoingRedirect = false;
 
-          }, Math.floor(Math.random() * 1500) + 500);
+          }, Math.floor(Math.random() * 100) + 100);
         });
       }
     }, data.redirectTimeout);
@@ -156,8 +156,9 @@ chrome.webRequest.onCompleted.addListener(
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/resultmulti/data/*",
-      "http://game.granbluefantasy.jp/*result/*"
+      "https://game.granbluefantasy.jp/resultmulti/data/*",
+      "https://game.granbluefantasy.jp/*result*/*",
+      "https://game.granbluefantasy.jp/#result_multi/*"
     ]
   },
 );

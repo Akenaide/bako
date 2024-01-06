@@ -8,7 +8,7 @@
     "declarativeContent",
     "storage",
     "bookmarks",
-    "http://game.granbluefantasy.jp/*"
+    "https://game.granbluefantasy.jp/*"
   ],
   "background": {
     "scripts": [
