@@ -10,6 +10,7 @@ const skills = {
 }
 
 var activate = true;
+const tabAlarms = {};
 
 var ongoingRedirect = false;
 let allKeys = [
@@ -66,23 +67,30 @@ let keyboardShortcut = {
 }
 
 function backforward() {
-    window.history.back();
-    window.history.forward();
+  window.history.back();
+  window.history.forward();
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "reload") {
-    // chrome.tabs.goBack(details.tabId);
-    chrome.tabs.reload();
-    // chrome.scripting.executeScript({
-    //   func: backforward
-    // });
+  if (alarm.name.startsWith('reload_')) {
+    const tabId = tabAlarms[alarm.name];
+    if (tabId) {
+      // Perform actions on the specific tab using tabId
+      // chrome.tabs.reload(tabId);
+      chrome.tabs.goBack(tabId);
+      chrome.tabs.goForward(tabId);
+      // Cleanup
+      delete tabAlarms[alarm.name];
+    }
   }
 })
 
-function delayAction(name) {
-  let offset =  Math.floor(Math.random() * 500) + 500;
-  chrome.alarms.create(name=name, {when:Date.now() +  offset})
+function delayAction(name, tabId) {
+  const alarmName = `${name}_${tabId}`;
+  const offset = Math.floor(Math.random() * 100) + 500; // TODO: use params
+  console.log(`offset for action: ${alarmName} is ${offset}`);
+  chrome.alarms.create(name = alarmName, { when: Date.now() + offset })
+  tabAlarms[alarmName] = tabId
 
 }
 
@@ -91,19 +99,19 @@ chrome.commands.onCommand.addListener(function (command) {
   keyboardShortcut[command]()
 });
 
-// http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
+// https://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
-  function () {
+  function (details) {
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack) {
-        delayAction("reload");
+        delayAction("reload", details.tabId);
       }
     });
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/*/summon_result.json*",
-      "http://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
+      "https://game.granbluefantasy.jp/rest/*/summon_result.json*",
+      "https://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
     ]
   },
 );
@@ -115,13 +123,13 @@ chrome.webRequest.onBeforeRequest.addListener(
 
     chrome.storage.sync.get('reloadSkill', function (data) {
       if (data.reloadSkill && Object.keys(skills).includes(postedString["ability_id"])) {
-        chrome.tabs.reload(details.tabId);
+        chrome.tabs.reload(details.tabId); // TODO: use delayAction
       }
     });
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/*/ability_result.json*"]
+      "https://game.granbluefantasy.jp/rest/*/ability_result.json*"]
   },
   ["requestBody"]
 );
@@ -133,7 +141,7 @@ chrome.webRequest.onCompleted.addListener(
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/*/supporter/*"
+      "https://game.granbluefantasy.jp/*/supporter/*"
     ]
   },
 );
@@ -175,14 +183,14 @@ chrome.webRequest.onCompleted.addListener(
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/resultmulti/data/*",
-      "http://game.granbluefantasy.jp/*result/*"
+      "https://game.granbluefantasy.jp/resultmulti/data/*",
+      "https://game.granbluefantasy.jp/*result/*"
     ]
   },
 );
 
 chrome.runtime.onInstalled.addListener(function () {
-  chrome.storage.sync.set({ reloadAttack: false }, function () {
+  chrome.storage.sync.set({ reloadAttack: true }, function () {
     console.log('Reload not activate');
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {

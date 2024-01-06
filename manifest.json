@@ -12,8 +12,7 @@
     "bookmarks"
   ],
   "host_permissions": [
-    "http://game.granbluefantasy.jp/*"
-
+    "https://game.granbluefantasy.jp/*"
   ],
   "background": {
     "service_worker": "service_worker.js"
