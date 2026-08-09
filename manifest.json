@@ -1,19 +1,18 @@
 {
   "name": "bako",
-  "version": "2.0",
+  "version": "3.0",
   "description": "Gbf auto refresh on attack",
   "permissions": [
     "webRequest",
     "tabs",
     "declarativeContent",
     "storage",
+    "alarms",
+    "scripting",
     "bookmarks"
   ],
   "host_permissions": [
-    "http://game.granbluefantasy.jp/*",
     "https://game.granbluefantasy.jp/*"
-
-
   ],
   "background": {
     "service_worker": "service_worker.js"

@@ -10,24 +10,27 @@ const skills = {
 }
 
 var activate = true;
+const tabAlarms = {};
 
+var ongoingRedirect = false;
 let allKeys = [
   "reloadSkill",
   "reloadAttack",
   "redirectFarm",
   "arcaMode",
+  "farmMap",
 ]
 
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
+chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (var key in changes) {
     var storageChange = changes[key];
     console.log('Storage key "%s" in namespace "%s" changed. ' +
-                'Old value was "%s", new value is "%s".',
-                key,
-                namespace,
-                storageChange.oldValue,
-                storageChange.newValue);
+      'Old value was "%s", new value is "%s".',
+      key,
+      namespace,
+      storageChange.oldValue,
+      storageChange.newValue);
   }
 });
 
@@ -38,10 +41,9 @@ function toggleArcaMode() {
 
   chrome.storage.sync.get(params, (result) => {
     for (const key of params) {
-        const element = !result[key];
-        result[key] = !result[key];
+      result[key] = !result[key];
     }
-        chrome.storage.sync.set(result, ()=> console.log("saved"))
+    chrome.storage.sync.set(result, () => console.log("saved"))
   })
 
 }
@@ -53,6 +55,8 @@ function deactivateAll() {
     allVal[val] = false;
   }
 
+  allVal['farmMap'] = "farm"
+  ongoingRedirect = false;
   chrome.storage.sync.set(allVal)
 }
 
@@ -61,85 +65,140 @@ let keyboardShortcut = {
   "deactivate-all": deactivateAll
 }
 
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name.startsWith('reload_')) {
+    const tabId = tabAlarms[alarm.name];
+    if (tabId) {
+      // Perform actions on the specific tab using tabId
+      // chrome.tabs.reload(tabId);
+      chrome.tabs.goBack(tabId);
+      chrome.tabs.goForward(tabId);
+      // Cleanup
+      delete tabAlarms[alarm.name];
+    }
+  }
+})
+
+function randomInRange(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function delayAction(name, tabId) {
+  const alarmName = `${name}_${tabId}`;
+  const offset = randomInRange(800, 2500); // human-like reaction time before reloading
+  console.log(`offset for action: ${alarmName} is ${offset}`);
+  chrome.alarms.create(name = alarmName, { when: Date.now() + offset })
+  tabAlarms[alarmName] = tabId
+
+}
+
 chrome.commands.onCommand.addListener(function (command) {
   console.log('Command:', command);
   keyboardShortcut[command]()
 });
 
-// http://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
+// https://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
 chrome.webRequest.onCompleted.addListener(
   function (details) {
     chrome.storage.sync.get('reloadAttack', function (data) {
       if (data.reloadAttack) {
-        setTimeout(() => {
-          chrome.tabs.goBack(details.tabId);
-        }, Math.floor(Math.random() * 500) + 500);
+        delayAction("reload", details.tabId);
       }
     });
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/*/summon_result.json*",
-      "http://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
       "https://game.granbluefantasy.jp/rest/*/summon_result.json*",
       "https://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
-
     ]
   },
 );
 
 chrome.webRequest.onBeforeRequest.addListener(
   function (details) {
+    const bytes = details.requestBody && details.requestBody.raw && details.requestBody.raw[0] && details.requestBody.raw[0].bytes;
+    if (!bytes) {
+      return;
+    }
     var postedString = JSON.parse(decodeURIComponent(String.fromCharCode.apply(null,
-      new Uint8Array(details.requestBody.raw[0].bytes))));
+      new Uint8Array(bytes))));
 
     chrome.storage.sync.get('reloadSkill', function (data) {
       if (data.reloadSkill && Object.keys(skills).includes(postedString["ability_id"])) {
-        chrome.tabs.reload(details.tabId);
+        chrome.tabs.reload(details.tabId); // TODO: use delayAction
       }
     });
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/rest/*/ability_result.json*"]
       "https://game.granbluefantasy.jp/rest/*/ability_result.json*"]
   },
   ["requestBody"]
 );
 
-// NM
+
 chrome.webRequest.onCompleted.addListener(
-  function (details) {
-    chrome.storage.sync.get('redirectFarm', function (data) {
-      if (data.redirectFarm) {
-        console.log("activate")
-        chrome.storage.sync.get('arcaMode', (data) => {
-          let key = "farm";
-          if (data.arcaMode) {
-            key = "arca";
-          }
-          chrome.bookmarks.search({ "title": key }, function (result) {
-            console.log("found", result[0].url)
-            setTimeout(() => {
-              chrome.tabs.update(details.tabId, { url: result[0].url });
-            }, Math.floor(Math.random() * 1500) + 500);
-          });
-        })
-      }
-    })
+  function () {
+    ongoingRedirect = false;
   },
   {
     urls: [
-      "http://game.granbluefantasy.jp/resultmulti/data/*",
-      "http://game.granbluefantasy.jp/*result/*"
-      "https://game.granbluefantasy.jp/resultmulti/data/*",
+      "https://game.granbluefantasy.jp/*/supporter/*"
+    ]
+  },
+);
+
+
+
+function redirectMap(details) {
+  if (ongoingRedirect) {
+    return
+  }
+  ongoingRedirect = true;
+  chrome.storage.sync.get(['redirectFarm', 'arcaMode', 'redirectTimeout', 'farmMap'], function (data) {
+    if (!data.redirectFarm) {
+      ongoingRedirect = false;
+      return;
+    }
+    setTimeout(() => {
+      console.log("activate")
+      let key = data.farmMap;
+      if (data.arcaMode) {
+        key = "arca";
+      }
+      console.log(key);
+      chrome.bookmarks.search({ "title": key }, function (result) {
+        if (!result.length) {
+          console.log("no bookmark found for", key);
+          ongoingRedirect = false;
+          return;
+        }
+        console.log("found", result[0].url)
+        setTimeout(() => {
+          chrome.tabs.update(details.tabId, { url: result[0].url });
+          ongoingRedirect = false;
+        }, randomInRange(100, 300));
+      });
+    }, data.redirectTimeout);
+  })
+
+}
+
+// NM
+chrome.webRequest.onCompleted.addListener(
+  function (details) {
+    redirectMap(details);
+  },
+  {
+    urls: [
+      "https://game.granbluefantasy.jp/resultmulti/*",
       "https://game.granbluefantasy.jp/*result/*"
     ]
   },
 );
 
 chrome.runtime.onInstalled.addListener(function () {
-  chrome.storage.sync.set({ reloadAttack: false }, function () {
+  chrome.storage.sync.set({ reloadAttack: true }, function () {
     console.log('Reload not activate');
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {
@@ -147,6 +206,12 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ 'arcaMode': false }, function () {
     console.log('ArcaMode not activate');
+  })
+  chrome.storage.sync.set({ 'redirectTimeout': 200 }, function () {
+    console.log('timeout is set to: 200');
+  })
+  chrome.storage.sync.set({ 'farmMap': "farm" }, function () {
+    console.log('Look for "farm" name');
   })
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
     chrome.declarativeContent.onPageChanged.addRules([{
