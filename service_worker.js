@@ -79,9 +79,13 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 })
 
+function randomInRange(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function delayAction(name, tabId) {
   const alarmName = `${name}_${tabId}`;
-  const offset = Math.floor(Math.random() * 100) + 500; // TODO: use params
+  const offset = randomInRange(800, 2500); // human-like reaction time before reloading
   console.log(`offset for action: ${alarmName} is ${offset}`);
   chrome.alarms.create(name = alarmName, { when: Date.now() + offset })
   tabAlarms[alarmName] = tabId
@@ -173,7 +177,7 @@ function redirectMap(details) {
         setTimeout(() => {
           chrome.tabs.update(details.tabId, { url: result[0].url });
           ongoingRedirect = false;
-        }, Math.floor(Math.random() * 1500) + 500);
+        }, randomInRange(100, 300));
       });
     }, data.redirectTimeout);
   })
@@ -187,7 +191,7 @@ chrome.webRequest.onCompleted.addListener(
   },
   {
     urls: [
-      "https://game.granbluefantasy.jp/resultmulti/data/*",
+      "https://game.granbluefantasy.jp/resultmulti/*",
       "https://game.granbluefantasy.jp/*result/*"
     ]
   },
@@ -203,8 +207,8 @@ chrome.runtime.onInstalled.addListener(function () {
   chrome.storage.sync.set({ 'arcaMode': false }, function () {
     console.log('ArcaMode not activate');
   })
-  chrome.storage.sync.set({ 'redirectTimeout': 3000 }, function () {
-    console.log('timeout is set to: 3000');
+  chrome.storage.sync.set({ 'redirectTimeout': 200 }, function () {
+    console.log('timeout is set to: 200');
   })
   chrome.storage.sync.set({ 'farmMap': "farm" }, function () {
     console.log('Look for "farm" name');
