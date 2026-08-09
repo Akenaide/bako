@@ -31,7 +31,8 @@ chrome.storage.sync.get('redirectFarm', function(data) {
 
 chrome.storage.sync.get('redirectTimeout', function(data) {
   if (data.redirectTimeout) {
-    redirectTimeout.nodeValue = data.redirectTimeout;
+    redirectTimeout.value = data.redirectTimeout;
+    timeoutValue.value = data.redirectTimeout;
   }
 });
 

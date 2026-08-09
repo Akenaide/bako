@@ -41,7 +41,6 @@ function toggleArcaMode() {
 
   chrome.storage.sync.get(params, (result) => {
     for (const key of params) {
-      const element = !result[key];
       result[key] = !result[key];
     }
     chrome.storage.sync.set(result, () => console.log("saved"))
@@ -64,11 +63,6 @@ function deactivateAll() {
 let keyboardShortcut = {
   "toggle-aracarum-mode": toggleArcaMode,
   "deactivate-all": deactivateAll
-}
-
-function backforward() {
-  window.history.back();
-  window.history.forward();
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -118,8 +112,12 @@ chrome.webRequest.onCompleted.addListener(
 
 chrome.webRequest.onBeforeRequest.addListener(
   function (details) {
+    const bytes = details.requestBody && details.requestBody.raw && details.requestBody.raw[0] && details.requestBody.raw[0].bytes;
+    if (!bytes) {
+      return;
+    }
     var postedString = JSON.parse(decodeURIComponent(String.fromCharCode.apply(null,
-      new Uint8Array(details.requestBody.raw[0].bytes))));
+      new Uint8Array(bytes))));
 
     chrome.storage.sync.get('reloadSkill', function (data) {
       if (data.reloadSkill && Object.keys(skills).includes(postedString["ability_id"])) {
@@ -154,23 +152,29 @@ function redirectMap(details) {
   }
   ongoingRedirect = true;
   chrome.storage.sync.get(['redirectFarm', 'arcaMode', 'redirectTimeout', 'farmMap'], function (data) {
+    if (!data.redirectFarm) {
+      ongoingRedirect = false;
+      return;
+    }
     setTimeout(() => {
-      if (data.redirectFarm) {
-        console.log("activate")
-        let key = data.farmMap;
-        if (data.arcaMode) {
-          key = "arca";
-        }
-        console.log(key);
-        chrome.bookmarks.search({ "title": key }, function (result) {
-          console.log("found", result[0].url)
-          setTimeout(() => {
-            chrome.tabs.update(details.tabId, { url: result[0].url });
-            ongoingRedirect = false;
-
-          }, Math.floor(Math.random() * 1500) + 500);
-        });
+      console.log("activate")
+      let key = data.farmMap;
+      if (data.arcaMode) {
+        key = "arca";
       }
+      console.log(key);
+      chrome.bookmarks.search({ "title": key }, function (result) {
+        if (!result.length) {
+          console.log("no bookmark found for", key);
+          ongoingRedirect = false;
+          return;
+        }
+        console.log("found", result[0].url)
+        setTimeout(() => {
+          chrome.tabs.update(details.tabId, { url: result[0].url });
+          ongoingRedirect = false;
+        }, Math.floor(Math.random() * 1500) + 500);
+      });
     }, data.redirectTimeout);
   })
 
