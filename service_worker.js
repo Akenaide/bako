@@ -10,9 +10,22 @@ const skills = {
 }
 
 var activate = true;
-const tabAlarms = {};
 
 var ongoingRedirect = false;
+
+// Alarm payloads are persisted to storage.local (keyed by alarm name) instead
+// of a plain object, so a scheduled action still has its data if the service
+// worker gets killed and restarted before the alarm fires.
+function setPendingAlarm(name, data) {
+  chrome.storage.local.set({ [name]: data });
+}
+
+function consumePendingAlarm(name, callback) {
+  chrome.storage.local.get(name, (result) => {
+    chrome.storage.local.remove(name);
+    callback(result[name]);
+  });
+}
 let allKeys = [
   "reloadSkill",
   "reloadAttack",
@@ -67,15 +80,27 @@ let keyboardShortcut = {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith('reload_')) {
-    const tabId = tabAlarms[alarm.name];
-    if (tabId) {
-      // Perform actions on the specific tab using tabId
-      // chrome.tabs.reload(tabId);
-      chrome.tabs.goBack(tabId);
-      chrome.tabs.goForward(tabId);
-      // Cleanup
-      delete tabAlarms[alarm.name];
-    }
+    consumePendingAlarm(alarm.name, (tabId) => {
+      if (tabId) {
+        // Perform actions on the specific tab using tabId
+        // chrome.tabs.reload(tabId);
+        chrome.tabs.goBack(tabId);
+        chrome.tabs.goForward(tabId);
+      }
+    });
+  } else if (alarm.name.startsWith('redirectWait_')) {
+    consumePendingAlarm(alarm.name, (pending) => {
+      if (pending) {
+        findAndGoToBookmark(pending);
+      }
+    });
+  } else if (alarm.name.startsWith('redirectGo_')) {
+    consumePendingAlarm(alarm.name, (pending) => {
+      if (pending) {
+        chrome.tabs.update(pending.tabId, { url: pending.url });
+        ongoingRedirect = false;
+      }
+    });
   }
 })
 
@@ -87,9 +112,8 @@ function delayAction(name, tabId) {
   const alarmName = `${name}_${tabId}`;
   const offset = randomInRange(800, 2500); // human-like reaction time before reloading
   console.log(`offset for action: ${alarmName} is ${offset}`);
-  chrome.alarms.create(name = alarmName, { when: Date.now() + offset })
-  tabAlarms[alarmName] = tabId
-
+  setPendingAlarm(alarmName, tabId);
+  chrome.alarms.create(alarmName, { when: Date.now() + offset })
 }
 
 chrome.commands.onCommand.addListener(function (command) {
@@ -150,6 +174,26 @@ chrome.webRequest.onCompleted.addListener(
 
 
 
+function findAndGoToBookmark(pending) {
+  console.log("activate")
+  let key = pending.farmMap;
+  if (pending.arcaMode) {
+    key = "arca";
+  }
+  console.log(key);
+  chrome.bookmarks.search({ "title": key }, function (result) {
+    if (!result.length) {
+      console.log("no bookmark found for", key);
+      ongoingRedirect = false;
+      return;
+    }
+    console.log("found", result[0].url)
+    const alarmName = `redirectGo_${pending.tabId}`;
+    setPendingAlarm(alarmName, { tabId: pending.tabId, url: result[0].url });
+    chrome.alarms.create(alarmName, { when: Date.now() + randomInRange(100, 300) })
+  });
+}
+
 function redirectMap(details) {
   if (ongoingRedirect) {
     return
@@ -160,26 +204,9 @@ function redirectMap(details) {
       ongoingRedirect = false;
       return;
     }
-    setTimeout(() => {
-      console.log("activate")
-      let key = data.farmMap;
-      if (data.arcaMode) {
-        key = "arca";
-      }
-      console.log(key);
-      chrome.bookmarks.search({ "title": key }, function (result) {
-        if (!result.length) {
-          console.log("no bookmark found for", key);
-          ongoingRedirect = false;
-          return;
-        }
-        console.log("found", result[0].url)
-        setTimeout(() => {
-          chrome.tabs.update(details.tabId, { url: result[0].url });
-          ongoingRedirect = false;
-        }, randomInRange(100, 300));
-      });
-    }, data.redirectTimeout);
+    const alarmName = `redirectWait_${details.tabId}`;
+    setPendingAlarm(alarmName, { tabId: details.tabId, arcaMode: data.arcaMode, farmMap: data.farmMap });
+    chrome.alarms.create(alarmName, { when: Date.now() + data.redirectTimeout })
   })
 
 }
