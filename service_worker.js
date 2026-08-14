@@ -13,6 +13,10 @@ var activate = true;
 
 var ongoingRedirect = false;
 
+// ponytail: in-memory map (tabId -> raidId), not persisted like the alarm
+// payloads; a service worker restart mid-raid just costs one extra reload.
+var enteredRaid = {};
+
 // Alarm payloads are persisted to storage.local (keyed by alarm name) instead
 // of a plain object, so a scheduled action still has its data if the service
 // worker gets killed and restarted before the alarm fires.
@@ -29,6 +33,7 @@ function consumePendingAlarm(name, callback) {
 let allKeys = [
   "reloadSkill",
   "reloadAttack",
+  "reloadEntry",
   "redirectFarm",
   "arcaMode",
   "farmMap",
@@ -172,6 +177,31 @@ chrome.webRequest.onCompleted.addListener(
   },
 );
 
+// Fires exactly when you actually join the raid (as opposed to picking a
+// support summon beforehand); the tab's URL hash carries the raid id by then.
+chrome.webRequest.onCompleted.addListener(
+  function (details) {
+    chrome.storage.sync.get('reloadEntry', function (data) {
+      if (!data.reloadEntry) {
+        return;
+      }
+      chrome.tabs.get(details.tabId, function (tab) {
+        const raidId = tab.url && tab.url.match(/raid_multi\/(\d+)/)?.[1];
+        if (!raidId || enteredRaid[details.tabId] === raidId) {
+          return;
+        }
+        enteredRaid[details.tabId] = raidId;
+        chrome.tabs.reload(details.tabId);
+      });
+    });
+  },
+  {
+    urls: [
+      "https://game.granbluefantasy.jp/rest/multiraid/start.json*"
+    ]
+  },
+);
+
 
 
 function findAndGoToBookmark(pending) {
@@ -230,6 +260,9 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {
     console.log('Redirect not activate');
+  })
+  chrome.storage.sync.set({ reloadEntry: false }, function () {
+    console.log('Reload entry not activate');
   })
   chrome.storage.sync.set({ 'arcaMode': false }, function () {
     console.log('ArcaMode not activate');

@@ -3,6 +3,64 @@
 
 <head>
   <style>
+    body {
+      width: 220px;
+      margin: 0;
+      padding: 12px 16px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      color: #222;
+    }
+
+    section {
+      margin-bottom: 14px;
+    }
+
+    section:last-child {
+      margin-bottom: 0;
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      padding-bottom: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #666;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 0;
+    }
+
+    .row label {
+      display: contents;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 6px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      margin: 0 8px;
+    }
+
+    input[type="number"] {
+      width: 40px;
+      border: none;
+      background: transparent;
+      color: #666;
+      text-align: right;
+    }
+
     button {
       height: 30px;
       width: 30px;
@@ -12,27 +70,28 @@
 </head>
 
 <body>
-  <div id="reload">
-    Reload
-    <hr>
-    <label for="reloadAttack">Attack: <input type="checkbox" id="reloadAttack" /></label>
-    <label for="reloadSkill">Skill: <input type="checkbox" id="reloadSkill" /></label>
-  </div>
+  <section id="reload">
+    <h2>Reload</h2>
+    <div class="row"><label for="reloadAttack">Attack</label><input type="checkbox" id="reloadAttack" /></div>
+    <div class="row"><label for="reloadSkill">Skill</label><input type="checkbox" id="reloadSkill" /></div>
+    <div class="row"><label for="reloadEntry">Raid entry</label><input type="checkbox" id="reloadEntry" /></div>
+  </section>
 
-  <div id="redirect">
+  <section id="redirect">
+    <h2>Redirect</h2>
+    <div class="row"><label for="redirectFarm">Farm</label><input type="checkbox" id="redirectFarm" /></div>
+    <div class="row">
+      <label for="redirectTimeout">Timeout</label>
+      <input type="range" name="timeout" id="redirectTimeout" min="100" max="800" step="100">
+      <input type="number" disabled id="timeoutValue">
+    </div>
+  </section>
 
-    Redirect
-    <hr>
-    <label for="redirectFarm">Farm: <input type="checkbox" id="redirectFarm" /></label>
-    Timeout: <input type="range" name="timeout" id="redirectTimeout" min="100" max="800" step="100">
-    <input type="number" disabled id="timeoutValue">
-  </div>
-  <div id="farm">
-
-    Bookmark
-    <hr>
-    <label for="farmMap">Farm name: <input type="text" id="farmMap" /></label>
-  </div>
+  <section id="farm">
+    <h2>Bookmark</h2>
+    <div class="row"><label for="farmMap">Farm name</label></div>
+    <input type="text" id="farmMap" />
+  </section>
 
   <script src="popup.js"></script>
 </body>

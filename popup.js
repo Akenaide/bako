@@ -6,6 +6,7 @@
 
 let reloadAttack = document.getElementById('reloadAttack');
 let reloadSkill = document.getElementById('reloadSkill');
+let reloadEntry = document.getElementById('reloadEntry');
 let redirectFarm = document.getElementById('redirectFarm');
 let redirectTimeout = document.getElementById('redirectTimeout');
 let timeoutValue = document.getElementById('timeoutValue');
@@ -20,6 +21,12 @@ chrome.storage.sync.get('reloadAttack', function(data) {
 chrome.storage.sync.get('reloadSkill', function(data) {
   if (data.reloadSkill) {
     reloadSkill.setAttribute('checked', true);
+  }
+});
+
+chrome.storage.sync.get('reloadEntry', function(data) {
+  if (data.reloadEntry) {
+    reloadEntry.setAttribute('checked', true);
   }
 });
 
@@ -52,6 +59,11 @@ reloadSkill.onchange = function(element) {
 reloadAttack.onchange = function(element) {
   let value = element.target.checked;
   chrome.storage.sync.set({"reloadAttack": value});
+};
+
+reloadEntry.onchange = function(element) {
+  let value = element.target.checked;
+  chrome.storage.sync.set({"reloadEntry": value});
 };
 
 redirectFarm.onchange = function(element) {
