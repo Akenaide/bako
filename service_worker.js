@@ -86,12 +86,19 @@ let keyboardShortcut = {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith('reload_')) {
     consumePendingAlarm(alarm.name, (tabId) => {
-      if (tabId) {
-        // Perform actions on the specific tab using tabId
-        // chrome.tabs.reload(tabId);
-        chrome.tabs.goBack(tabId);
-        chrome.tabs.goForward(tabId);
+      if (!tabId) {
+        return;
       }
+      chrome.storage.sync.get('reloadMode', ({ reloadMode }) => {
+        if (reloadMode === 'reload') {
+          chrome.tabs.reload(tabId);
+        } else if (reloadMode === 'back') {
+          chrome.tabs.goBack(tabId);
+        } else {
+          chrome.tabs.goBack(tabId);
+          chrome.tabs.goForward(tabId);
+        }
+      });
     });
   } else if (alarm.name.startsWith('redirectWait_')) {
     consumePendingAlarm(alarm.name, (pending) => {
@@ -263,6 +270,9 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ reloadEntry: false }, function () {
     console.log('Reload entry not activate');
+  })
+  chrome.storage.sync.set({ reloadMode: "backforward" }, function () {
+    console.log('Reload mode set to: backforward');
   })
   chrome.storage.sync.set({ 'arcaMode': false }, function () {
     console.log('ArcaMode not activate');
