@@ -1,6 +1,6 @@
 {
   "name": "bako",
-  "version": "4.1",
+  "version": "4.2",
   "description": "Gbf auto refresh on attack",
   "permissions": [
     "webRequest",

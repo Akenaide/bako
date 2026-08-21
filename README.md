@@ -1,6 +1,9 @@
 # bako
 Granblue fantasy (gbf) auto refresh on attack
 
+## v4.2
+- Added a reload mode option for the raid-entry action: choose between back & forward (default), back only, or a full reload.
+
 ## v4.1
 - Added a "Raid entry" reload option: reloads once, immediately, the first time you join a raid (deduped per raid id), off by default.
 - Restyled the popup for readability (sectioned layout, no functional changes).
