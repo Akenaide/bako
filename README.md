@@ -1,6 +1,10 @@
 # bako
 Granblue fantasy (gbf) auto refresh on attack
 
+## v4.3
+- Split summon reload from attack reload: new "Summon" toggle in the popup.
+- All toggles now default to off (they're reset on every extension reload).
+
 ## v4.2
 - Added a reload mode option for the raid-entry action: choose between back & forward (default), back only, or a full reload.
 
