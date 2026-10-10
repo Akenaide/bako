@@ -263,11 +263,11 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 chrome.runtime.onInstalled.addListener(function () {
-  chrome.storage.sync.set({ reloadAttack: true }, function () {
+  chrome.storage.sync.set({ reloadAttack: false }, function () {
     console.log('Reload not activate');
   })
-  chrome.storage.sync.set({ reloadSummon: true }, function () {
-    console.log('Reload summon activate');
+  chrome.storage.sync.set({ reloadSummon: false }, function () {
+    console.log('Reload summon not activate');
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {
     console.log('Redirect not activate');
