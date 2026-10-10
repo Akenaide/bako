@@ -5,6 +5,7 @@
 'use strict';
 
 let reloadAttack = document.getElementById('reloadAttack');
+let reloadSummon = document.getElementById('reloadSummon');
 let reloadSkill = document.getElementById('reloadSkill');
 let reloadEntry = document.getElementById('reloadEntry');
 let reloadMode = document.getElementById('reloadMode');
@@ -16,6 +17,12 @@ let farmMap = document.getElementById('farmMap');
 chrome.storage.sync.get('reloadAttack', function(data) {
   if (data.reloadAttack) {
     reloadAttack.setAttribute('checked', true);
+  }
+});
+
+chrome.storage.sync.get('reloadSummon', function(data) {
+  if (data.reloadSummon) {
+    reloadSummon.setAttribute('checked', true);
   }
 });
 
@@ -64,6 +71,11 @@ reloadSkill.onchange = function(element) {
 reloadAttack.onchange = function(element) {
   let value = element.target.checked;
   chrome.storage.sync.set({"reloadAttack": value});
+};
+
+reloadSummon.onchange = function(element) {
+  let value = element.target.checked;
+  chrome.storage.sync.set({"reloadSummon": value});
 };
 
 reloadEntry.onchange = function(element) {

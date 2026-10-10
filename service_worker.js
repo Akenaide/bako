@@ -33,6 +33,7 @@ function consumePendingAlarm(name, callback) {
 let allKeys = [
   "reloadSkill",
   "reloadAttack",
+  "reloadSummon",
   "reloadEntry",
   "redirectFarm",
   "arcaMode",
@@ -134,21 +135,21 @@ chrome.commands.onCommand.addListener(function (command) {
 });
 
 // https://game.granbluefantasy.jp/rest/multiraid/normal_attack_result.json?_=1591798695315&t=1591798695318&uid=26271737
-chrome.webRequest.onCompleted.addListener(
-  function (details) {
-    chrome.storage.sync.get('reloadAttack', function (data) {
-      if (data.reloadAttack) {
-        delayAction("reload", details.tabId);
-      }
-    });
-  },
-  {
-    urls: [
-      "https://game.granbluefantasy.jp/rest/*/summon_result.json*",
-      "https://game.granbluefantasy.jp/rest/*/normal_attack_result.json*",
-    ]
-  },
-);
+function reloadOnCompleted(settingKey, url) {
+  chrome.webRequest.onCompleted.addListener(
+    function (details) {
+      chrome.storage.sync.get(settingKey, function (data) {
+        if (data[settingKey]) {
+          delayAction("reload", details.tabId);
+        }
+      });
+    },
+    { urls: [url] },
+  );
+}
+
+reloadOnCompleted('reloadAttack', "https://game.granbluefantasy.jp/rest/*/normal_attack_result.json*");
+reloadOnCompleted('reloadSummon', "https://game.granbluefantasy.jp/rest/*/summon_result.json*");
 
 chrome.webRequest.onBeforeRequest.addListener(
   function (details) {
@@ -264,6 +265,9 @@ chrome.webRequest.onCompleted.addListener(
 chrome.runtime.onInstalled.addListener(function () {
   chrome.storage.sync.set({ reloadAttack: true }, function () {
     console.log('Reload not activate');
+  })
+  chrome.storage.sync.set({ reloadSummon: true }, function () {
+    console.log('Reload summon activate');
   })
   chrome.storage.sync.set({ redirectFarm: false }, function () {
     console.log('Redirect not activate');
