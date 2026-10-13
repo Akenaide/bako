@@ -1,6 +1,9 @@
 # bako
 Granblue fantasy (gbf) auto refresh on attack
 
+## v4.4
+- Added a "Set current page as farming" button in the popup that points the farm bookmark at the active tab (creates the bookmark if it doesn't exist).
+
 ## v4.3
 - Split summon reload from attack reload: new "Summon" toggle in the popup.
 - All toggles now default to off (they're reset on every extension reload).
