@@ -104,3 +104,24 @@ farmMap.onchange = function(element) {
   chrome.storage.sync.set({"farmMap": value});
   farmMap.value = value;
 };
+
+// Point the farm bookmark at the active tab: reuse the one the redirect would pick, else create it.
+document.getElementById('setFarm').onclick = function() {
+  let status = document.getElementById('setFarmStatus');
+  let title = farmMap.value;
+  if (!title) {
+    status.textContent = 'Set a farm name first';
+    return;
+  }
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    let url = tabs[0].url;
+    chrome.bookmarks.search({title: title}, function(result) {
+      let done = function() { status.textContent = 'Saved "' + title + '"'; };
+      if (result.length && result[0].url) {
+        chrome.bookmarks.update(result[0].id, {url: url}, done);
+      } else {
+        chrome.bookmarks.create({title: title, url: url}, done);
+      }
+    });
+  });
+};

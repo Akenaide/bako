@@ -61,6 +61,15 @@
       text-align: right;
     }
 
+    #setFarm {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    #setFarmStatus {
+      color: #666;
+    }
+
     button {
       height: 30px;
       width: 30px;
@@ -100,6 +109,8 @@
     <h2>Bookmark</h2>
     <div class="row"><label for="farmMap">Farm name</label></div>
     <input type="text" id="farmMap" />
+    <button id="setFarm">Set current page as farming</button>
+    <div id="setFarmStatus"></div>
   </section>
 
   <script src="popup.js"></script>
