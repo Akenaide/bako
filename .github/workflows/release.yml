@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches manifest version
+        run: test "$GITHUB_REF_NAME" = "v$(jq -r .version manifest.json)"
+      - run: git archive --format=zip -o "bako-$GITHUB_REF_NAME.zip" HEAD
+      - run: gh release create "$GITHUB_REF_NAME" "bako-$GITHUB_REF_NAME.zip" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

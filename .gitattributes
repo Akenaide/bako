@@ -1,0 +1,5 @@
+# Left out of the release zip (git archive)
+.github export-ignore
+.gitattributes export-ignore
+CLAUDE.md export-ignore
+justfile export-ignore
