@@ -13,9 +13,12 @@ var activate = true;
 
 var ongoingRedirect = false;
 
-// ponytail: in-memory map (tabId -> raidId), not persisted like the alarm
-// payloads; a service worker restart mid-raid just costs one extra reload.
-var enteredRaid = {};
+// Last raid entered per tab, in storage.session (key enteredRaid_<tabId>) so it
+// survives service worker restarts; Chrome wipes it on browser restart and
+// extension reload/update.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.session.remove('enteredRaid_' + tabId);
+});
 
 // Alarm payloads are persisted to storage.local (keyed by alarm name) instead
 // of a plain object, so a scheduled action still has its data if the service
@@ -195,11 +198,18 @@ chrome.webRequest.onCompleted.addListener(
       }
       chrome.tabs.get(details.tabId, function (tab) {
         const raidId = tab.url && tab.url.match(/raid_multi\/(\d+)/)?.[1];
-        if (!raidId || enteredRaid[details.tabId] === raidId) {
+        if (!raidId) {
           return;
         }
-        enteredRaid[details.tabId] = raidId;
-        chrome.tabs.reload(details.tabId);
+        const key = 'enteredRaid_' + details.tabId;
+        chrome.storage.session.get(key, function (entered) {
+          if (entered[key] === raidId) {
+            return;
+          }
+          chrome.storage.session.set({ [key]: raidId }, function () {
+            chrome.tabs.reload(details.tabId);
+          });
+        });
       });
     });
   },
