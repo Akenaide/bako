@@ -1,6 +1,9 @@
 # bako
 Granblue fantasy (gbf) auto refresh on attack
 
+## v4.4.1
+- Fixed the entry refresh reloading a raid twice: the entered raid is now kept in session storage, so a service worker restart no longer forgets it.
+
 ## v4.4
 - Added a "Set current page as farming" button in the popup that points the farm bookmark at the active tab (creates the bookmark if it doesn't exist).
 
