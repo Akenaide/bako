@@ -61,12 +61,14 @@
       text-align: right;
     }
 
-    #setFarm {
+    #setFarm,
+    #setLinked {
       width: 100%;
       margin-top: 6px;
     }
 
-    #setFarmStatus {
+    #setFarmStatus,
+    #setLinkedStatus {
       color: #666;
     }
 
@@ -111,6 +113,13 @@
     <input type="text" id="farmMap" />
     <button id="setFarm">Set current page as farming</button>
     <div id="setFarmStatus"></div>
+  </section>
+
+  <section id="linked">
+    <h2>Linked tab</h2>
+    <div class="row"><label for="reloadLinked">Go to linked page on attack</label><input type="checkbox" id="reloadLinked" /></div>
+    <button id="setLinked">Link current tab</button>
+    <div id="setLinkedStatus"></div>
   </section>
 
   <script src="popup.js"></script>

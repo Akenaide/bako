@@ -41,6 +41,7 @@ let allKeys = [
   "redirectFarm",
   "arcaMode",
   "farmMap",
+  "reloadLinked",
 ]
 
 
@@ -85,6 +86,31 @@ function deactivateAll() {
 let keyboardShortcut = {
   "toggle-aracarum-mode": toggleArcaMode,
   "deactivate-all": deactivateAll
+}
+
+// Send the linked tab (any window) back to the page it was linked on, right away,
+// before the battle tab's delayed attack reload. A plain reload would stick on the
+// result page the game moves it to after the first time.
+function reloadLinkedTab(battleTabId) {
+  chrome.storage.sync.get('reloadLinked', ({ reloadLinked }) => {
+    if (!reloadLinked) {
+      return;
+    }
+    chrome.storage.session.get(['linkedTab', 'linkedUrl'], ({ linkedTab, linkedUrl }) => {
+      if (!linkedTab || !linkedUrl || linkedTab === battleTabId) {
+        return;
+      }
+      // Small random delay, kept well under delayAction's 800 ms so the linked tab still moves first.
+      setTimeout(() => {
+        chrome.tabs.get(linkedTab).then((tab) => {
+          // Going to the URL the tab is already on does nothing, so reload instead.
+          return tab.url === linkedUrl
+            ? chrome.tabs.reload(linkedTab)
+            : chrome.tabs.update(linkedTab, { url: linkedUrl });
+        }).catch((e) => console.log("linked tab update failed", linkedTab, e.message));
+      }, randomInRange(30, 100));
+    });
+  });
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -144,6 +170,9 @@ function reloadOnCompleted(settingKey, url) {
       chrome.storage.sync.get(settingKey, function (data) {
         if (data[settingKey]) {
           delayAction("reload", details.tabId);
+          if (settingKey === 'reloadAttack') {
+            reloadLinkedTab(details.tabId);
+          }
         }
       });
     },
@@ -284,6 +313,9 @@ chrome.runtime.onInstalled.addListener(function () {
   })
   chrome.storage.sync.set({ reloadEntry: false }, function () {
     console.log('Reload entry not activate');
+  })
+  chrome.storage.sync.set({ reloadLinked: false }, function () {
+    console.log('Reload linked tab not activate');
   })
   chrome.storage.sync.set({ reloadMode: "backforward" }, function () {
     console.log('Reload mode set to: backforward');

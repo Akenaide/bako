@@ -13,6 +13,7 @@ let redirectFarm = document.getElementById('redirectFarm');
 let redirectTimeout = document.getElementById('redirectTimeout');
 let timeoutValue = document.getElementById('timeoutValue');
 let farmMap = document.getElementById('farmMap');
+let reloadLinked = document.getElementById('reloadLinked');
 
 chrome.storage.sync.get('reloadAttack', function(data) {
   if (data.reloadAttack) {
@@ -35,6 +36,12 @@ chrome.storage.sync.get('reloadSkill', function(data) {
 chrome.storage.sync.get('reloadEntry', function(data) {
   if (data.reloadEntry) {
     reloadEntry.setAttribute('checked', true);
+  }
+});
+
+chrome.storage.sync.get('reloadLinked', function(data) {
+  if (data.reloadLinked) {
+    reloadLinked.setAttribute('checked', true);
   }
 });
 
@@ -83,6 +90,11 @@ reloadEntry.onchange = function(element) {
   chrome.storage.sync.set({"reloadEntry": value});
 };
 
+reloadLinked.onchange = function(element) {
+  let value = element.target.checked;
+  chrome.storage.sync.set({"reloadLinked": value});
+};
+
 reloadMode.onchange = function(element) {
   let value = element.target.value;
   chrome.storage.sync.set({"reloadMode": value});
@@ -122,6 +134,16 @@ document.getElementById('setFarm').onclick = function() {
       } else {
         chrome.bookmarks.create({title: title, url: url}, done);
       }
+    });
+  });
+};
+
+// storage.session: tab ids are reused after a browser restart, so a stored id must not outlive it.
+document.getElementById('setLinked').onclick = function() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    let url = tabs[0].url;
+    chrome.storage.session.set({linkedTab: tabs[0].id, linkedUrl: url}, function() {
+      document.getElementById('setLinkedStatus').textContent = 'Linked: ' + url.replace(/^https?:\/\/[^/]+/, '…');
     });
   });
 };
