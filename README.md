@@ -1,6 +1,9 @@
 # bako
 Granblue fantasy (gbf) auto refresh on attack
 
+## v4.5
+- Added a "Linked tab" section in the popup: link any tab (any window) with "Link current tab", turn on "Go to linked page on attack", and that tab goes back to the page it was linked on (e.g. `#quest`) as soon as an attack lands, before the battle tab's own attack reload. The link is forgotten on browser restart.
+
 ## v4.4.1
 - Fixed the entry refresh reloading a raid twice: the entered raid is now kept in session storage, so a service worker restart no longer forgets it.
 
